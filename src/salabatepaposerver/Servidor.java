@@ -13,12 +13,14 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import salabatepapoclient.Util.VerificadorCliente;
 import salabatepapoclient.interfaces.ICliente;
 import salabatepapoclient.interfaces.IServidor;
 
 public class Servidor extends UnicastRemoteObject implements IServidor, Runnable {
 
     private final ArrayList<ICliente> clientesConectados;
+    private Runnable runnable;
 
     public Servidor() throws RemoteException {
         clientesConectados = new ArrayList<>();
@@ -29,6 +31,7 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
         Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
         registry.rebind(cliente.getApelido(), cliente);
         clientesConectados.add(cliente);
+        new VerificadorCliente(cliente);
         return true;
     }
 
@@ -77,7 +80,8 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
             String hostAddress = ipAddress.getHostAddress();
 
             Naming.rebind("rmi://" + hostAddress + "/batePapoDuol", server);
-            System.out.println("[Sistema] Seridor do Bate Papo D'uol está online no endereço: " + hostAddress + ".");
+            System.out.println("[Sistema] Servidor de Bate Papo D'uol está online no endereço: " + hostAddress + ".");
+
         } catch (RemoteException | MalformedURLException | UnknownHostException ex) {
             System.out.println("[Sistema] Servidor fora do ar:\r\n" + ex);
         }

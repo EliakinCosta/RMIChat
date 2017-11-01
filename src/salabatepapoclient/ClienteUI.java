@@ -14,10 +14,11 @@ import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import salabatepapoclient.Util.VerificadorServidor;
 import salabatepapoclient.interfaces.ICliente;
 import salabatepapoclient.interfaces.IServidor;
 
-public class ClienteUI extends JFrame {
+public class ClienteUI extends JFrame implements Runnable {
 
     private ICliente cliente;
     private IServidor servidor;
@@ -339,6 +340,7 @@ public class ClienteUI extends JFrame {
                 jPnlLogin.setVisible(false);
                 JpnlChat.setVisible(true);
             }
+            new Thread(this).start();
         } catch (MalformedURLException | NotBoundException | RemoteException e) {
             JOptionPane.showMessageDialog(this, "Ocorreu um erro ao tentar se conectar com o servidor.");
             Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, e);
@@ -389,13 +391,14 @@ public class ClienteUI extends JFrame {
                 for (ICliente clienteConectado : clientesConectados) {
                     clienteConectado.atualizarParticipantes();
                 }
-                isConectado = false;
-                jPnlLogin.setVisible(true);
-                JpnlChat.setVisible(false);
             }
         } catch (RemoteException ex) {
             JOptionPane.showMessageDialog(this, "Ocorreu um erro ao tentar se desconectar do servidor.");
             Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            isConectado = false;
+            jPnlLogin.setVisible(true);
+            JpnlChat.setVisible(false);
         }
     }
 
@@ -447,6 +450,25 @@ public class ClienteUI extends JFrame {
             clienteUI.setLocationRelativeTo(null);
             clienteUI.setVisible(true);
         });
+
+    }
+
+    @Override
+    public synchronized void run() {
+        VerificadorServidor verificadorServidor = new VerificadorServidor();
+        try {
+            while (true) {
+                verificadorServidor.verificar();
+                Thread.sleep(1000);
+            }
+        } catch (InterruptedException | NotBoundException | RemoteException ex) {
+            Logger.getLogger(VerificadorServidor.class.getName()).log(Level.SEVERE, null, ex);
+            if (!Thread.currentThread().isInterrupted()) {
+                Thread.currentThread().interrupt();
+            }
+            JOptionPane.showMessageDialog(this, "Falha no servidor. Servidor fora do ar.");
+            this.desconectarServidor();
+        }
     }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

@@ -10,4 +10,5 @@ public interface ICliente extends Remote {
     public String getApelido() throws RemoteException;
 
     public void atualizarParticipantes() throws RemoteException;
+
 }
