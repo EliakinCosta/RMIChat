@@ -53,7 +53,7 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
         try {
             System.out.println(mensagem);
             for (ICliente cliente : clientesConectados) {
-                String replaceMessage = mensagem.replaceFirst(cliente.getApelido() + " disse:\r\n", "Você disse:\r\n  ")
+                String replaceMessage = mensagem.replaceFirst(cliente.getApelido() + " disse:", "Você disse:")
                         .replaceFirst(cliente.getApelido() + ", ", "Você, ");
                 cliente.informar(replaceMessage);
             }

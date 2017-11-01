@@ -325,6 +325,7 @@ public class ClienteUI extends JFrame {
         }
         try {
             if (!isConectado) {
+                jTxarConversa.setText("");
                 cliente = new Cliente(jTxfApelido.getText(), this);
                 String mensagem = cliente.getApelido() + ", entrou na sala.";
                 servidor = (IServidor) Naming.lookup("rmi://" + jFTxIp.getText() + "/batePapoDuol");
