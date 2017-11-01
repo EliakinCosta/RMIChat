@@ -213,7 +213,6 @@ public class ClienteUI extends JFrame{
         jTxarConversa.setLineWrap(true);
         jTxarConversa.setRows(10);
         jTxarConversa.setTabSize(4);
-        jTxarConversa.setToolTipText("");
         jScrollPane1.setViewportView(jTxarConversa);
 
         jTxtMensagem.setToolTipText("Vamos lá, diga alguma coisa.");
@@ -331,7 +330,7 @@ public class ClienteUI extends JFrame{
                 String mensagem = cliente.getApelido() + ", entrou na sala.";
                 servidor = (IServidor) Naming.lookup("rmi://" + jFTxIp.getText() + "/batePapoDuol");
                 servidor.registrar(cliente);
-                servidor.publicarMensagem(mensagem);
+                servidor.difundirMensagem(mensagem);
                 ArrayList<ICliente> clientesConectados = servidor.getClientesConectados();
                 for (ICliente clienteConectado : clientesConectados) {
                     clienteConectado.atualizarParticipantes();
@@ -349,7 +348,7 @@ public class ClienteUI extends JFrame{
 
     private void jBtbEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtbEnviarActionPerformed
         try {
-            servidor.publicarMensagem(cliente.getApelido() + " disse:\r\n  " + jTxtMensagem.getText());
+            servidor.difundirMensagem(cliente.getApelido() + " disse:\r\n  " + jTxtMensagem.getText());
             this.jTxtMensagem.setText("");
         } catch (RemoteException ex) {
             Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -372,8 +371,15 @@ public class ClienteUI extends JFrame{
 
     public void desconectarServidor() throws HeadlessException {
         try {
+<<<<<<< HEAD
             if (isConectado) {                
                 servidor.desregistrar(cliente);                
+=======
+            if (isConectado) {
+                String mensagem = cliente.getApelido() + ", saiu da sala.";
+                servidor.desregistrar(cliente);
+                servidor.difundirMensagem(mensagem);
+>>>>>>> b8c4988d5395b226f04a166f038d1a75aab91720
 
                 ArrayList<ICliente> clientesConectados = servidor.getClientesConectados();
                 for (ICliente clienteConectado : clientesConectados) {

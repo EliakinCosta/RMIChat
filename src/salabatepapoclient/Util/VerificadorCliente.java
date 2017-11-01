@@ -29,7 +29,7 @@ public class VerificadorCliente implements IVerificador, Runnable {
         String apelido = cliente.getApelido();
         Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
         isOk = null != registry.lookup(apelido);
-        System.out.println("Cliente: " + apelido + ", " + (isOk ? "" : "não") + " ok.");
+        System.out.println("Cliente: " + apelido + ", " + (isOk ? " ok." : "não ok."));
         return isOk;
     }
 
@@ -44,7 +44,7 @@ public class VerificadorCliente implements IVerificador, Runnable {
             try {
                 System.out.println("Cliente " + this.nome + " parou de funcionar");
                 this.servidor.desregistrar(this.cliente);
-                this.servidor.publicarMensagem(this.nome + " se desconectou");
+                this.servidor.difundirMensagem(this.nome + " se desconectou");
                 if (!Thread.currentThread().isInterrupted()) {
                     Thread.currentThread().interrupt();            
                 }

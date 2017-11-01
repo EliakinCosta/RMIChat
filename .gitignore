@@ -26,3 +26,5 @@ hs_err_pid*
 /SalaBatePapoServer/build/
 /SalaBatePapoClient/build/
 /SalaBatePapoClient/dist/
+/build/
+/dist/
