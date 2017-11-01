@@ -21,7 +21,7 @@ public class VerificadorCliente implements IVerificador {
         String apelido = cliente.getApelido();
         Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
         isOk = null != registry.lookup(apelido);
-        System.out.println("Cliente: " + apelido + ", " + (isOk ? "" : "não") + " ok.");
+        System.out.println("Cliente: " + apelido + ", " + (isOk ? " ok." : "não ok."));
         return isOk;
     }
 

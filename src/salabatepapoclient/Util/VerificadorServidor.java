@@ -14,7 +14,7 @@ public class VerificadorServidor implements IVerificador {
         boolean isOk = false;
         Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
         isOk = null != registry.lookup(IServidor.REGISTRY_BINDING_NAME);
-        System.out.println("Servidor " + (isOk ? "" : "não") + "  ok!");
+        System.out.println("Servidor está " + (isOk ? "no ar." : "fora do ar."));
         return isOk;
     }
 
