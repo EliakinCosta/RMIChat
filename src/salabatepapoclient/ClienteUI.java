@@ -357,21 +357,11 @@ public class ClienteUI extends JFrame{
     }//GEN-LAST:event_jBtbEnviarActionPerformed
 
     private void jBtnDesconectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtnDesconectarActionPerformed
-        this.desconectarServidor();
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        this.desconectarServidor();        
     }//GEN-LAST:event_jBtnDesconectarActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        this.desconectarServidor();
-        try {
-            Thread.sleep(1000);
-        } catch (InterruptedException ex) {
-            Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        this.desconectarServidor();        
     }//GEN-LAST:event_formWindowClosing
 
     private void jTxtMensagemKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTxtMensagemKeyPressed
@@ -382,10 +372,8 @@ public class ClienteUI extends JFrame{
 
     public void desconectarServidor() throws HeadlessException {
         try {
-            if (isConectado) {
-                String mensagem = cliente.getApelido() + ", saiu da sala.";
-                servidor.desregistrar(cliente);
-                servidor.publicarMensagem(mensagem);
+            if (isConectado) {                
+                servidor.desregistrar(cliente);                
 
                 ArrayList<ICliente> clientesConectados = servidor.getClientesConectados();
                 for (ICliente clienteConectado : clientesConectados) {

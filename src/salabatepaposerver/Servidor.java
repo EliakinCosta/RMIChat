@@ -40,11 +40,7 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
         try {
             Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
             clientesConectados.remove(cliente);
-
-//            if (null != registry.lookup(cliente.getApelido())) {
-//                registry.unbind(cliente.getApelido());
-//                return true;
-//            }
+            return true;
         } catch (AccessException ex) {
             Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
         }
