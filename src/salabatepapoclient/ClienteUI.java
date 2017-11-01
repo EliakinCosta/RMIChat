@@ -1,11 +1,24 @@
 package salabatepapoclient;
 
+import java.awt.EventQueue;
+import java.awt.HeadlessException;
+import java.net.MalformedURLException;
+import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.DefaultListModel;
 import javax.swing.JOptionPane;
 import salabatepapoclient.interfaces.ICliente;
+import salabatepapoclient.interfaces.IServidor;
 
 public class ClienteUI extends javax.swing.JFrame {
+
+    private ICliente cliente;
+    private IServidor servidor;
 
     public ClienteUI() {
         initComponents();
@@ -44,6 +57,11 @@ public class ClienteUI extends javax.swing.JFrame {
         setName("mainFrame"); // NOI18N
         setPreferredSize(new java.awt.Dimension(450, 685));
         setResizable(false);
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            public void windowClosing(java.awt.event.WindowEvent evt) {
+                formWindowClosing(evt);
+            }
+        });
 
         jLayeredPane1.setMaximumSize(new java.awt.Dimension(450, 950));
         jLayeredPane1.setMinimumSize(new java.awt.Dimension(450, 950));
@@ -286,22 +304,67 @@ public class ClienteUI extends javax.swing.JFrame {
 
     private void jBtnConectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtnConectarActionPerformed
         if (null == jTxfApelido.getText() || (null != jTxfApelido.getText() && jTxfApelido.getText().isEmpty())) {
-            JOptionPane.showMessageDialog(this, "Você precisa de um apelido.");
+            JOptionPane.showMessageDialog(this, "Você precisa informar um apelido.");
+            return;
+        }
+        if (null == jFTxIp.getText() || (null != jFTxIp.getText() && jFTxIp.getText().isEmpty())) {
+            JOptionPane.showMessageDialog(this, "Você precisa informar um endereço de IP.");
             return;
         }
 
-        jPnlLogin.setVisible(false);
-        JpnlChat.setVisible(true);
+        try {
+            cliente = new Cliente(jTxfApelido.getText());
+            servidor = (IServidor) Naming.lookup("rmi://" + jFTxIp.getText() + "/batePapoDuol");
+            servidor.registrar(cliente);
+            atualizarUsuario(servidor.getClientesConectados());
+            jPnlLogin.setVisible(false);
+            JpnlChat.setVisible(true);
+        } catch (MalformedURLException | NotBoundException | RemoteException e) {
+            JOptionPane.showMessageDialog(this, "Ocorreu um erro ao tentar se conectar com o servidor.");
+            Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, e);
+        }
     }//GEN-LAST:event_jBtnConectarActionPerformed
 
     private void jBtbEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtbEnviarActionPerformed
-
+        this.enviarMensagem();
     }//GEN-LAST:event_jBtbEnviarActionPerformed
 
     private void jBtnDesconectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtnDesconectarActionPerformed
-        jPnlLogin.setVisible(true);
-        JpnlChat.setVisible(false);
+        this.descsonectarServidor();
     }//GEN-LAST:event_jBtnDesconectarActionPerformed
+
+    private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
+        this.descsonectarServidor();
+    }//GEN-LAST:event_formWindowClosing
+
+    private void descsonectarServidor() throws HeadlessException {
+        try {
+            UnicastRemoteObject.unexportObject(cliente, true);
+            this.servidor.desregistrar(cliente);
+            atualizarUsuario(servidor.getClientesConectados());
+            jPnlLogin.setVisible(true);
+            JpnlChat.setVisible(false);
+        } catch (RemoteException ex) {
+            JOptionPane.showMessageDialog(this, "Ocorreu um erro ao tentar se desconectar do servidor.");
+            Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    private void enviarMensagem() {
+
+    }
+
+    private void atualizarUsuario(ArrayList<ICliente> clientesConectados) {
+        final DefaultListModel<String> listaParticipantes = new DefaultListModel<>();
+        clientesConectados.forEach(clienteConectado -> {
+            try {
+                listaParticipantes.addElement(clienteConectado.getApelido());
+            } catch (RemoteException ex) {
+                Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        });
+        this.jLstParticipantes.setModel(listaParticipantes);
+    }
 
     /**
      * @param args the command line arguments
@@ -332,9 +395,11 @@ public class ClienteUI extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(new Runnable() {
+        EventQueue.invokeLater(new Runnable() {
             public void run() {
-                new ClienteUI().setVisible(true);
+                ClienteUI clienteUI = new ClienteUI();
+                clienteUI.setLocationRelativeTo(null);
+                clienteUI.setVisible(true);
             }
         });
     }
@@ -359,6 +424,7 @@ public class ClienteUI extends javax.swing.JFrame {
     private javax.swing.JTextField jTxfApelido;
     private javax.swing.JTextField jTxtMensagem;
     // End of variables declaration//GEN-END:variables
+
 }
 
 class Cliente extends UnicastRemoteObject implements ICliente {

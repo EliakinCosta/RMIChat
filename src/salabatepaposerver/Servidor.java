@@ -32,11 +32,11 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
 
     @Override
     public synchronized boolean desregistrar(ICliente cliente) throws RemoteException {
-        String mensagem = cliente.getApelido() + " entrou na sala.";
-        cliente.informar("Você entrou na sala.");
+        String mensagem = cliente.getApelido() + " saiu da sala.";
+        cliente.informar("Você saiu da sala.");
         publicarMensagem(mensagem);
         System.out.println(mensagem);
-        clientesConectados.add(cliente);
+        clientesConectados.remove(cliente);
         return true;
     }
 
