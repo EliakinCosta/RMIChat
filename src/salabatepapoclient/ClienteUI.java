@@ -371,15 +371,8 @@ public class ClienteUI extends JFrame{
 
     public void desconectarServidor() throws HeadlessException {
         try {
-<<<<<<< HEAD
             if (isConectado) {                
-                servidor.desregistrar(cliente);                
-=======
-            if (isConectado) {
-                String mensagem = cliente.getApelido() + ", saiu da sala.";
-                servidor.desregistrar(cliente);
-                servidor.difundirMensagem(mensagem);
->>>>>>> b8c4988d5395b226f04a166f038d1a75aab91720
+                servidor.desregistrar(cliente);               
 
                 ArrayList<ICliente> clientesConectados = servidor.getClientesConectados();
                 for (ICliente clienteConectado : clientesConectados) {
