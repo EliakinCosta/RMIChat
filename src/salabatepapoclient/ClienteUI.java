@@ -18,7 +18,7 @@ import salabatepapoclient.Util.VerificadorServidor;
 import salabatepapoclient.interfaces.ICliente;
 import salabatepapoclient.interfaces.IServidor;
 
-public class ClienteUI extends JFrame implements Runnable {
+public class ClienteUI extends JFrame{
 
     private ICliente cliente;
     private IServidor servidor;
@@ -327,7 +327,7 @@ public class ClienteUI extends JFrame implements Runnable {
         try {
             if (!isConectado) {
                 jTxarConversa.setText("");
-                cliente = new Cliente(jTxfApelido.getText(), this);
+                cliente = new Cliente(jTxfApelido.getText(), this, servidor);
                 String mensagem = cliente.getApelido() + ", entrou na sala.";
                 servidor = (IServidor) Naming.lookup("rmi://" + jFTxIp.getText() + "/batePapoDuol");
                 servidor.registrar(cliente);
@@ -340,7 +340,7 @@ public class ClienteUI extends JFrame implements Runnable {
                 jPnlLogin.setVisible(false);
                 JpnlChat.setVisible(true);
             }
-            new Thread(this).start();
+            new Thread((Runnable) cliente).start();
         } catch (MalformedURLException | NotBoundException | RemoteException e) {
             JOptionPane.showMessageDialog(this, "Ocorreu um erro ao tentar se conectar com o servidor.");
             Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, e);
@@ -380,7 +380,7 @@ public class ClienteUI extends JFrame implements Runnable {
         }
     }//GEN-LAST:event_jTxtMensagemKeyPressed
 
-    private void desconectarServidor() throws HeadlessException {
+    public void desconectarServidor() throws HeadlessException {
         try {
             if (isConectado) {
                 String mensagem = cliente.getApelido() + ", saiu da sala.";
@@ -453,24 +453,6 @@ public class ClienteUI extends JFrame implements Runnable {
 
     }
 
-    @Override
-    public synchronized void run() {
-        VerificadorServidor verificadorServidor = new VerificadorServidor();
-        try {
-            while (true) {
-                verificadorServidor.verificar();
-                Thread.sleep(1000);
-            }
-        } catch (InterruptedException | NotBoundException | RemoteException ex) {
-            Logger.getLogger(VerificadorServidor.class.getName()).log(Level.SEVERE, null, ex);
-            if (!Thread.currentThread().isInterrupted()) {
-                Thread.currentThread().interrupt();
-            }
-            JOptionPane.showMessageDialog(this, "Falha no servidor. Servidor fora do ar.");
-            this.desconectarServidor();
-        }
-    }
-
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel JpnlChat;
     private javax.swing.JButton jBtbEnviar;
@@ -494,14 +476,16 @@ public class ClienteUI extends JFrame implements Runnable {
 
 }
 
-class Cliente extends UnicastRemoteObject implements ICliente {
+class Cliente extends UnicastRemoteObject implements ICliente, Runnable {
 
     private final String apelido;
     private final ClienteUI clienteUi;
+    private final IServidor servidor;
 
-    public Cliente(String apelido, ClienteUI clienteUi) throws RemoteException {
+    public Cliente(String apelido, ClienteUI clienteUi, IServidor servidor) throws RemoteException {
         this.apelido = apelido;
         this.clienteUi = clienteUi;
+        this.servidor = servidor;
     }
 
     @Override
@@ -517,6 +501,22 @@ class Cliente extends UnicastRemoteObject implements ICliente {
     @Override
     public void atualizarParticipantes() throws RemoteException {
         clienteUi.atualizarUsuario();
+    }
+
+    @Override
+    public synchronized void run() {
+        VerificadorServidor verificadorServidor = new VerificadorServidor();
+        try {
+            while (true) {
+                verificadorServidor.verificar();
+                Thread.sleep(1000);
+            }
+        } catch (InterruptedException | NotBoundException | RemoteException ex) {                        
+            JOptionPane.showMessageDialog(this.clienteUi, "Falha no servidor. Servidor fora do ar.");            
+        }
+        if (!Thread.currentThread().isInterrupted()) {
+                Thread.currentThread().interrupt();
+        }
     }
 
 }

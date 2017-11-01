@@ -31,7 +31,7 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
         Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
         registry.rebind(cliente.getApelido(), cliente);
         clientesConectados.add(cliente);
-        new VerificadorCliente(cliente);
+        new Thread(new VerificadorCliente(cliente, this)).start();
         return true;
     }
 
@@ -41,11 +41,11 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
             Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
             clientesConectados.remove(cliente);
 
-            if (null != registry.lookup(cliente.getApelido())) {
-                registry.unbind(cliente.getApelido());
-                return true;
-            }
-        } catch (NotBoundException | AccessException ex) {
+//            if (null != registry.lookup(cliente.getApelido())) {
+//                registry.unbind(cliente.getApelido());
+//                return true;
+//            }
+        } catch (AccessException ex) {
             Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
         }
         return false;
