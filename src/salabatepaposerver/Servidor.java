@@ -26,7 +26,6 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
 
     @Override
     public synchronized boolean registrar(ICliente cliente) throws RemoteException {
-//        Remote exportedObject = UnicastRemoteObject.exportObject(cliente, Registry.REGISTRY_PORT);
         Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
         registry.rebind(cliente.getApelido(), cliente);
         clientesConectados.add(cliente);
@@ -37,10 +36,10 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
     public synchronized boolean desregistrar(ICliente cliente) throws RemoteException {
         try {
             Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
+            clientesConectados.remove(cliente);
+
             if (null != registry.lookup(cliente.getApelido())) {
                 registry.unbind(cliente.getApelido());
-//            UnicastRemoteObject.unexportObject(this, true);
-                clientesConectados.remove(cliente);
                 return true;
             }
         } catch (NotBoundException | AccessException ex) {
@@ -51,10 +50,11 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
 
     @Override
     public synchronized void publicarMensagem(String mensagem) throws RemoteException {
-        System.out.println(mensagem);
         try {
+            System.out.println(mensagem);
             for (ICliente cliente : clientesConectados) {
-                mensagem = mensagem.replaceFirst(cliente.getApelido(), "Você");
+                mensagem = mensagem.replaceFirst(cliente.getApelido() + " disse:\r\n", "Você, ")
+                        .replaceFirst(cliente.getApelido() + ", ", "Você, ");
                 cliente.informar(mensagem);
             }
         } catch (RemoteException ex) {

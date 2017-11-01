@@ -2,6 +2,7 @@ package salabatepapoclient;
 
 import java.awt.EventQueue;
 import java.awt.HeadlessException;
+import java.awt.event.KeyEvent;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -216,6 +217,11 @@ public class ClienteUI extends javax.swing.JFrame {
         jTxtMensagem.setToolTipText("Vamos lá, diga alguma coisa.");
         jTxtMensagem.setMaximumSize(new java.awt.Dimension(69, 22));
         jTxtMensagem.setMinimumSize(new java.awt.Dimension(69, 22));
+        jTxtMensagem.addKeyListener(new java.awt.event.KeyAdapter() {
+            public void keyPressed(java.awt.event.KeyEvent evt) {
+                jTxtMensagemKeyPressed(evt);
+            }
+        });
 
         jBtnDesconectar.setText("Desconectar");
         jBtnDesconectar.setToolTipText("Desconectar");
@@ -319,12 +325,15 @@ public class ClienteUI extends javax.swing.JFrame {
         try {
             if (!isConectado) {
                 cliente = new Cliente(jTxfApelido.getText(), this);
-                String mensagem = cliente.getApelido() + " entrou na sala.";
-                this.servidor.publicarMensagem(mensagem);
+                String mensagem = cliente.getApelido() + ", entrou na sala.";
                 servidor = (IServidor) Naming.lookup("rmi://" + jFTxIp.getText() + "/batePapoDuol");
                 servidor.registrar(cliente);
-                atualizarUsuario(servidor.getClientesConectados());
-                this.isConectado = true;
+                servidor.publicarMensagem(mensagem);
+                ArrayList<ICliente> clientesConectados = servidor.getClientesConectados();
+                for (ICliente clienteConectado : clientesConectados) {
+                    clienteConectado.atualizarParticipantes();
+                }
+                isConectado = true;
                 jPnlLogin.setVisible(false);
                 JpnlChat.setVisible(true);
             }
@@ -335,7 +344,12 @@ public class ClienteUI extends javax.swing.JFrame {
     }
 
     private void jBtbEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtbEnviarActionPerformed
-        this.enviarMensagem(jTxtMensagem.getText());
+        try {
+            servidor.publicarMensagem(cliente.getApelido() + " disse:\r\n" + jTxtMensagem.getText());
+            this.jTxtMensagem.setText("");
+        } catch (RemoteException ex) {
+            Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_jBtbEnviarActionPerformed
 
     private void jBtnDesconectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtnDesconectarActionPerformed
@@ -346,16 +360,24 @@ public class ClienteUI extends javax.swing.JFrame {
         this.desconectarServidor();
     }//GEN-LAST:event_formWindowClosing
 
+    private void jTxtMensagemKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTxtMensagemKeyPressed
+        if (evt.getKeyCode() == KeyEvent.VK_ENTER) {
+            this.jBtbEnviarActionPerformed(null);
+        }
+    }//GEN-LAST:event_jTxtMensagemKeyPressed
+
     private void desconectarServidor() throws HeadlessException {
         try {
             if (isConectado) {
-                String mensagem = cliente.getApelido() + " saiu da sala.";
-                this.servidor.desregistrar(cliente);
-                this.servidor.publicarMensagem(mensagem);
-                System.out.println(mensagem);
+                String mensagem = cliente.getApelido() + ", saiu da sala.";
+                servidor.desregistrar(cliente);
+                servidor.publicarMensagem(mensagem);
 
-                atualizarUsuario(servidor.getClientesConectados());
-                this.isConectado = false;
+                ArrayList<ICliente> clientesConectados = servidor.getClientesConectados();
+                for (ICliente clienteConectado : clientesConectados) {
+                    clienteConectado.atualizarParticipantes();
+                }
+                isConectado = false;
                 jPnlLogin.setVisible(true);
                 JpnlChat.setVisible(false);
             }
@@ -366,29 +388,22 @@ public class ClienteUI extends javax.swing.JFrame {
     }
 
     public void enviarMensagem(String mensagem) {
+        jTxarConversa.append(mensagem + "\n\r");
+    }
+
+    public void atualizarUsuario() {
         try {
-            jTxarConversa.append(cliente.getApelido() + ":\n\r" + mensagem + "\n\r");
+            final DefaultListModel<String> listaParticipantes = new DefaultListModel<>();
+            ArrayList<ICliente> clientesConectados = servidor.getClientesConectados();
+            for (ICliente clienteConectado : clientesConectados) {
+                listaParticipantes.addElement(clienteConectado.getApelido());
+            }
+            this.jLstParticipantes.setModel(listaParticipantes);
         } catch (RemoteException ex) {
-            JOptionPane.showMessageDialog(this, "Ocorreu um erro ao tentar enviar a mensagem.");
             Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private void atualizarUsuario(ArrayList<ICliente> clientesConectados) {
-        final DefaultListModel<String> listaParticipantes = new DefaultListModel<>();
-        clientesConectados.forEach(clienteConectado -> {
-            try {
-                listaParticipantes.addElement(clienteConectado.getApelido());
-            } catch (RemoteException ex) {
-                Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, ex);
-            }
-        });
-        this.jLstParticipantes.setModel(listaParticipantes);
-    }
-
-    /**
-     * @param args the command line arguments
-     */
     public static void main(String args[]) {
         /* Set the Nimbus look and feel */
         //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code (optional) ">
@@ -468,8 +483,8 @@ class Cliente extends UnicastRemoteObject implements ICliente {
     }
 
     @Override
-    public String toString() {
-        return apelido;
+    public void atualizarParticipantes() throws RemoteException {
+        clienteUi.atualizarUsuario();
     }
 
 }
