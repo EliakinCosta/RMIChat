@@ -64,7 +64,7 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
             InetAddress ipAddress = InetAddress.getLocalHost();
             String hostAddress = ipAddress.getHostAddress();
 
-            Naming.rebind("rmi://" + "0.0.0.0" + "/batePapoDuol", server);
+            Naming.rebind("rmi://" + "0.0.0.0:" + Registry.REGISTRY_PORT + "/batePapoDuol", server);
             System.out.println("[Sistema] Servidor de Bate Papo D'uol está online no endereço: " + hostAddress + ".");
 
         } catch (RemoteException | MalformedURLException | UnknownHostException ex) {

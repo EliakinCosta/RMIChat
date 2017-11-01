@@ -386,6 +386,7 @@ public class ClienteUI extends JFrame{
             isConectado = false;
             jPnlLogin.setVisible(true);
             JpnlChat.setVisible(false);
+            new Thread((Runnable) cliente).interrupt();
         }
     }
 
@@ -503,7 +504,7 @@ class Cliente extends UnicastRemoteObject implements ICliente, Runnable {
         }
         if (!Thread.currentThread().isInterrupted()) {
                 Thread.currentThread().interrupt();
-        }
+        }        
     }
 
 }

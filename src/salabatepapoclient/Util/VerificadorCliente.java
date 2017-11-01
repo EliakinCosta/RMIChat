@@ -38,7 +38,7 @@ public class VerificadorCliente implements IVerificador, Runnable {
         try {
             while (true) {
                 this.verificar();
-                Thread.sleep(5000);
+                Thread.sleep(1000);
             }
         } catch (RemoteException | NotBoundException | InterruptedException ex) {            
             try {
