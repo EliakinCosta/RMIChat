@@ -12,11 +12,12 @@ import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.DefaultListModel;
+import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import salabatepapoclient.interfaces.ICliente;
 import salabatepapoclient.interfaces.IServidor;
 
-public class ClienteUI extends javax.swing.JFrame {
+public class ClienteUI extends JFrame {
 
     private ICliente cliente;
     private IServidor servidor;
@@ -345,7 +346,7 @@ public class ClienteUI extends javax.swing.JFrame {
 
     private void jBtbEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtbEnviarActionPerformed
         try {
-            servidor.publicarMensagem(cliente.getApelido() + " disse:\r\n" + jTxtMensagem.getText());
+            servidor.publicarMensagem(cliente.getApelido() + " disse:\r\n  " + jTxtMensagem.getText());
             this.jTxtMensagem.setText("");
         } catch (RemoteException ex) {
             Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, ex);
@@ -354,10 +355,20 @@ public class ClienteUI extends javax.swing.JFrame {
 
     private void jBtnDesconectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtnDesconectarActionPerformed
         this.desconectarServidor();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_jBtnDesconectarActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
         this.desconectarServidor();
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException ex) {
+            Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }//GEN-LAST:event_formWindowClosing
 
     private void jTxtMensagemKeyPressed(java.awt.event.KeyEvent evt) {//GEN-FIRST:event_jTxtMensagemKeyPressed
@@ -387,7 +398,7 @@ public class ClienteUI extends javax.swing.JFrame {
         }
     }
 
-    public void enviarMensagem(String mensagem) {
+    public void escreverMensagem(String mensagem) {
         jTxarConversa.append(mensagem + "\n\r");
     }
 
@@ -430,12 +441,10 @@ public class ClienteUI extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        EventQueue.invokeLater(new Runnable() {
-            public void run() {
-                ClienteUI clienteUI = new ClienteUI();
-                clienteUI.setLocationRelativeTo(null);
-                clienteUI.setVisible(true);
-            }
+        EventQueue.invokeLater(() -> {
+            ClienteUI clienteUI = new ClienteUI();
+            clienteUI.setLocationRelativeTo(null);
+            clienteUI.setVisible(true);
         });
     }
 
@@ -474,7 +483,7 @@ class Cliente extends UnicastRemoteObject implements ICliente {
 
     @Override
     public void informar(String mensagem) throws RemoteException {
-        clienteUi.enviarMensagem(mensagem);
+        clienteUi.escreverMensagem(mensagem);
     }
 
     @Override

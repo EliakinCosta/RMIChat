@@ -53,9 +53,9 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
         try {
             System.out.println(mensagem);
             for (ICliente cliente : clientesConectados) {
-                mensagem = mensagem.replaceFirst(cliente.getApelido() + " disse:\r\n", "Você, ")
+                String replaceMessage = mensagem.replaceFirst(cliente.getApelido() + " disse:\r\n", "Você disse:\r\n  ")
                         .replaceFirst(cliente.getApelido() + ", ", "Você, ");
-                cliente.informar(mensagem);
+                cliente.informar(replaceMessage);
             }
         } catch (RemoteException ex) {
             System.out.println("Erro ao publicar a mensagem:\r\n" + mensagem + "\r\n" + ex);
