@@ -23,6 +23,8 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
 
     @Override
     public synchronized boolean registrar(ICliente cliente) throws RemoteException {
+        Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
+        registry.rebind(cliente.getApelido(), cliente);
         clientesConectados.add(cliente);
         new Thread(new VerificadorCliente(cliente, this)).start();
         return true;
@@ -38,7 +40,8 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
         try {
             System.out.println(mensagem);
             for (ICliente cliente : clientesConectados) {
-                String replaceMessage = mensagem.replaceFirst(cliente.getApelido() + " disse:", "Você disse:")
+                String replaceMessage = mensagem
+                        .replaceFirst(cliente.getApelido() + " disse:", "Você disse:")
                         .replaceFirst(cliente.getApelido() + ", ", "Você, ");
                 cliente.informar(replaceMessage);
             }
@@ -61,7 +64,7 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
             InetAddress ipAddress = InetAddress.getLocalHost();
             String hostAddress = ipAddress.getHostAddress();
 
-            Naming.rebind("rmi://" + hostAddress + "/batePapoDuol", server);
+            Naming.rebind("rmi://" + "0.0.0.0" + "/batePapoDuol", server);
             System.out.println("[Sistema] Servidor de Bate Papo D'uol está online no endereço: " + hostAddress + ".");
 
         } catch (RemoteException | MalformedURLException | UnknownHostException ex) {
