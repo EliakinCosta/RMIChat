@@ -3,12 +3,16 @@ package salabatepaposerver;
 import java.net.InetAddress;
 import java.net.MalformedURLException;
 import java.net.UnknownHostException;
+import java.rmi.AccessException;
 import java.rmi.Naming;
+import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import salabatepapoclient.interfaces.ICliente;
 import salabatepapoclient.interfaces.IServidor;
 
@@ -22,22 +26,27 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
 
     @Override
     public synchronized boolean registrar(ICliente cliente) throws RemoteException {
-        String mensagem = cliente.getApelido() + " entrou na sala.";
-        cliente.informar("Você entrou na sala.");
-        publicarMensagem(mensagem);
-        System.out.println(mensagem);
+//        Remote exportedObject = UnicastRemoteObject.exportObject(cliente, Registry.REGISTRY_PORT);
+        Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
+        registry.rebind(cliente.getApelido(), cliente);
         clientesConectados.add(cliente);
         return true;
     }
 
     @Override
     public synchronized boolean desregistrar(ICliente cliente) throws RemoteException {
-        String mensagem = cliente.getApelido() + " saiu da sala.";
-        cliente.informar("Você saiu da sala.");
-        publicarMensagem(mensagem);
-        System.out.println(mensagem);
-        clientesConectados.remove(cliente);
-        return true;
+        try {
+            Registry registry = LocateRegistry.getRegistry(Registry.REGISTRY_PORT);
+            if (null != registry.lookup(cliente.getApelido())) {
+                registry.unbind(cliente.getApelido());
+//            UnicastRemoteObject.unexportObject(this, true);
+                clientesConectados.remove(cliente);
+                return true;
+            }
+        } catch (NotBoundException | AccessException ex) {
+            Logger.getLogger(Servidor.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return false;
     }
 
     @Override
@@ -45,6 +54,7 @@ public class Servidor extends UnicastRemoteObject implements IServidor, Runnable
         System.out.println(mensagem);
         try {
             for (ICliente cliente : clientesConectados) {
+                mensagem = mensagem.replaceFirst(cliente.getApelido(), "Você");
                 cliente.informar(mensagem);
             }
         } catch (RemoteException ex) {

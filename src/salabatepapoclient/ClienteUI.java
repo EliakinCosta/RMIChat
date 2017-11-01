@@ -19,6 +19,7 @@ public class ClienteUI extends javax.swing.JFrame {
 
     private ICliente cliente;
     private IServidor servidor;
+    private boolean isConectado;
 
     public ClienteUI() {
         initComponents();
@@ -303,55 +304,74 @@ public class ClienteUI extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void jBtnConectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtnConectarActionPerformed
-        if (null == jTxfApelido.getText() || (null != jTxfApelido.getText() && jTxfApelido.getText().isEmpty())) {
+        this.conectarServidor();
+    }//GEN-LAST:event_jBtnConectarActionPerformed
+
+    private void conectarServidor() throws HeadlessException {
+        if (jTxfApelido.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Você precisa informar um apelido.");
             return;
         }
-        if (null == jFTxIp.getText() || (null != jFTxIp.getText() && jFTxIp.getText().isEmpty())) {
+        if (jFTxIp.getText().isEmpty()) {
             JOptionPane.showMessageDialog(this, "Você precisa informar um endereço de IP.");
             return;
         }
-
         try {
-            cliente = new Cliente(jTxfApelido.getText());
-            servidor = (IServidor) Naming.lookup("rmi://" + jFTxIp.getText() + "/batePapoDuol");
-            servidor.registrar(cliente);
-            atualizarUsuario(servidor.getClientesConectados());
-            jPnlLogin.setVisible(false);
-            JpnlChat.setVisible(true);
+            if (!isConectado) {
+                cliente = new Cliente(jTxfApelido.getText(), this);
+                String mensagem = cliente.getApelido() + " entrou na sala.";
+                this.servidor.publicarMensagem(mensagem);
+                servidor = (IServidor) Naming.lookup("rmi://" + jFTxIp.getText() + "/batePapoDuol");
+                servidor.registrar(cliente);
+                atualizarUsuario(servidor.getClientesConectados());
+                this.isConectado = true;
+                jPnlLogin.setVisible(false);
+                JpnlChat.setVisible(true);
+            }
         } catch (MalformedURLException | NotBoundException | RemoteException e) {
             JOptionPane.showMessageDialog(this, "Ocorreu um erro ao tentar se conectar com o servidor.");
             Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, e);
         }
-    }//GEN-LAST:event_jBtnConectarActionPerformed
+    }
 
     private void jBtbEnviarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtbEnviarActionPerformed
-        this.enviarMensagem();
+        this.enviarMensagem(jTxtMensagem.getText());
     }//GEN-LAST:event_jBtbEnviarActionPerformed
 
     private void jBtnDesconectarActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_jBtnDesconectarActionPerformed
-        this.descsonectarServidor();
+        this.desconectarServidor();
     }//GEN-LAST:event_jBtnDesconectarActionPerformed
 
     private void formWindowClosing(java.awt.event.WindowEvent evt) {//GEN-FIRST:event_formWindowClosing
-        this.descsonectarServidor();
+        this.desconectarServidor();
     }//GEN-LAST:event_formWindowClosing
 
-    private void descsonectarServidor() throws HeadlessException {
+    private void desconectarServidor() throws HeadlessException {
         try {
-            UnicastRemoteObject.unexportObject(cliente, true);
-            this.servidor.desregistrar(cliente);
-            atualizarUsuario(servidor.getClientesConectados());
-            jPnlLogin.setVisible(true);
-            JpnlChat.setVisible(false);
+            if (isConectado) {
+                String mensagem = cliente.getApelido() + " saiu da sala.";
+                this.servidor.desregistrar(cliente);
+                this.servidor.publicarMensagem(mensagem);
+                System.out.println(mensagem);
+
+                atualizarUsuario(servidor.getClientesConectados());
+                this.isConectado = false;
+                jPnlLogin.setVisible(true);
+                JpnlChat.setVisible(false);
+            }
         } catch (RemoteException ex) {
             JOptionPane.showMessageDialog(this, "Ocorreu um erro ao tentar se desconectar do servidor.");
             Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
-    private void enviarMensagem() {
-
+    public void enviarMensagem(String mensagem) {
+        try {
+            jTxarConversa.append(cliente.getApelido() + ":\n\r" + mensagem + "\n\r");
+        } catch (RemoteException ex) {
+            JOptionPane.showMessageDialog(this, "Ocorreu um erro ao tentar enviar a mensagem.");
+            Logger.getLogger(ClienteUI.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     private void atualizarUsuario(ArrayList<ICliente> clientesConectados) {
@@ -430,15 +450,16 @@ public class ClienteUI extends javax.swing.JFrame {
 class Cliente extends UnicastRemoteObject implements ICliente {
 
     private final String apelido;
+    private final ClienteUI clienteUi;
 
-    public Cliente(String apelido) throws RemoteException {
+    public Cliente(String apelido, ClienteUI clienteUi) throws RemoteException {
         this.apelido = apelido;
+        this.clienteUi = clienteUi;
     }
 
     @Override
     public void informar(String mensagem) throws RemoteException {
-        System.out.println(mensagem);
-//        escreverMensagem(mensagem);
+        clienteUi.enviarMensagem(mensagem);
     }
 
     @Override
