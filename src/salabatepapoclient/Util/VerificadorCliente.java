@@ -44,7 +44,7 @@ public class VerificadorCliente implements IVerificador, Runnable {
             try {
                 System.out.println("Cliente " + this.nome + " parou de funcionar");
                 this.servidor.desregistrar(this.cliente);
-                this.servidor.publicarMensagem(this.nome + " se desconectou");
+                this.servidor.difundirMensagem(this.nome + " se desconectou");
                 if (!Thread.currentThread().isInterrupted()) {
                     Thread.currentThread().interrupt();            
                 }
